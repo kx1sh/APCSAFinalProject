@@ -1,5 +1,7 @@
 // collision can be weird
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import processing.core.*;
 private HashMap<PVector, int[][][]> chunks = new HashMap<>();
 public PVector cam;
 public PVector center = new PVector();
@@ -8,6 +10,11 @@ private static final int loadChunks = 1;
 private static final int chunkSize = 16;
 private static final int chunkHeight = 256;
 private PGraphics pg;
+private ArrayList<Creeper> creepers = new ArrayList<>();
+private static final int initialCreeperCount = 3; 
+private static final int maxCreeperCount = 10;
+private int creeperSpawnTimer = 0;
+private static final int creeperSpawnInterval = 300;
 
 public void setup() {
   size(640*2, 360*2, P3D);
@@ -16,6 +23,7 @@ public void setup() {
   perspective(PI/3.0, (float)width/height, 1e-2, cameraZ*10.0);
   cam = new PVector(0, -500, 0);
   seed = (long)random(1 << 63);
+  for(int i=0; i<10; ++i) spawnCreeper();
 }
 
 public void draw() {
@@ -93,7 +101,8 @@ public void draw() {
     if (getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20)) != 0 ||
         getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)) != 0) cam = orig.copy();
   }
-  
+  updateCreepers();
+  drawCreepers();
   popMatrix();
   hint(DISABLE_DEPTH_TEST);
   noLights();
@@ -134,4 +143,38 @@ public int getBlock(long x, long y, long z) {
   long cz = (long)((tz >= 0 ? tz : tz - chunkSize + 1) / chunkSize) * chunkSize; 
   var c = chunks.get(new PVector(cx, cz));
   return c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
+}
+private void spawnCreeper(){
+ float a=random(-chunkSize*10, chunkSize*10);
+ float b=random(-chunkSize*10, chunkSize*10);
+  float c=random(-chunkSize*10, chunkSize*10);
+  Creeper t = new Creeper(a, -b, c);
+  creepers.add(t);
+}
+private void updateCreepers(){
+  for(Creeper x : creepers) x.update();}
+private void drawCreepers(){for(Creeper x:creepers) x.draw();}
+
+
+
+class Creeper{
+  PVector p;
+  PVector dir;
+  
+  Creeper(float x, float y, float z) {
+    p=new PVector(x,y,z);
+    dir=PVector.random2D();
+  }
+  void update(){
+   PVector n= p.add(dir);
+   if(getBlock((int)(n.x/10),(int)(-1*n.y/10),(int)(n.z/10))==0) p=n; 
+   else dir=PVector.random2D();
+  }
+  void draw(){
+   pushMatrix();
+   translate(p.x, p.y, p.z);
+   fill(0,255,0);
+   box(40, 70, 40);
+   popMatrix();
+  }
 }
