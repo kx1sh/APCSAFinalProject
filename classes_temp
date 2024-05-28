@@ -1,0 +1,31 @@
+public class Entity{
+ float hp;
+ PVector dir; 
+ PVector pos;
+ PVector vel;
+ World world; // World class needs to be initialized;
+ void update() {
+   
+ }
+ void sethp(float newhp) {hp=newhp;}
+ float gethp(){return hp;}
+ void setdir(PVector newdir){dir=newdir;}
+ PVector getdir(){return dir;}
+void setpos(PVector newdir){pos=newdir;}
+ PVector getpos(){return pos;}
+ void setvel(PVector newdir){vel=newdir;}
+ PVector getvel(){return vel;}
+}
+public class Player extends Entity {
+ Item[] inventory; // initialize Item
+ void update() {
+   
+ }
+}
+public class Item {
+ byte count;
+ int type; 
+ void use (Entity e) {
+   
+ }
+}
