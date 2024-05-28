@@ -4,20 +4,27 @@ private HashMap<PVector, int[][][]> chunks = new HashMap<>();
 public PVector cam;
 public PVector center = new PVector();
 public long seed;
-private static final int loadChunks = 1;
+public PVector vel;
+private static final int loadChunks = 2;
 private static final int chunkSize = 16;
 private static final int chunkHeight = 256;
-private static final float playerSpeed = 5;
+private static final float playerSpeed = 15;
 private PGraphics pg;
-private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3;
+private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3, OAK_WOOD = 4;
+private static final int generationHeight = 10;
+private static final int waterHeight = 9;
+public boolean[] keyPresses;
 
 public void setup() {
   size(640*2, 360*2, P3D);
   noStroke();
+  smooth();
   float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
   perspective(PI/3.0, (float)width/height, 1e-2, cameraZ*10.0);
   cam = new PVector(0, -500, 0);
   seed = (long)random(1 << 63);
+  vel = new PVector(0, 0, 0);
+  keyPresses = new boolean[512];
 }
 
 public void draw() {
@@ -58,13 +65,15 @@ public void draw() {
               fill(
                 b == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
                 b == BEDROCK ? color(100) :
-                color(0, 100, 150),
-                b == WATER ? 100 : 255
+                b == WATER ? color(0, 100, 150) :
+                color(180, 150, 0),
+                b == WATER ? 200 : 255
               );
               if (b == WATER) {
+                pushMatrix();
                 rotateX(-PI/2);
                 rect(-10, -10, 20, 20);
-                rotateX(PI/2);
+                popMatrix();
               } else box(20);
             }
             translate(0, -20, 0);
@@ -81,31 +90,30 @@ public void draw() {
     popMatrix();
     translate(chunkSize*20, 0, 0);
   }
- 
-  if (keyPressed) {
-    PVector orig = cam.copy();
-    switch (key) {
-      case 'w':
-        cam.add(new PVector(center.x, 0, center.z).normalize().mult(playerSpeed));
-        break;
-      case 'a':
-        cam.add(new PVector(center.z, 0, -center.x).normalize().mult(playerSpeed));
-        break;
-      case 's':
-        cam.add(new PVector(-center.x, 0, -center.z).normalize().mult(playerSpeed));
-        break;
-      case 'd':
-        cam.add(new PVector(-center.z, 0, center.x).normalize().mult(playerSpeed));
-        break;
-      case ' ':
-        cam.add(new PVector(0, -playerSpeed, 0));
-        break;
-      case CODED:
-        if (keyCode == SHIFT) cam.add(new PVector(0, playerSpeed, 0));
-        break;
-    }
-    if (getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20)) == GRASS ||
-        getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)) == GRASS) cam = orig.copy();
+  
+  boolean grounded = isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20)+2, (int)(cam.z/20)));
+  PVector orig = cam.copy();
+  if (keyPresses['w']) cam.add(new PVector(center.x, 0, center.z).normalize().mult(playerSpeed));
+  if (keyPresses['a']) cam.add(new PVector(center.z, 0, -center.x).normalize().mult(playerSpeed));
+  if (keyPresses['s']) cam.add(new PVector(-center.x, 0, -center.z).normalize().mult(playerSpeed));
+  if (keyPresses['d']) cam.add(new PVector(-center.z, 0, center.x).normalize().mult(playerSpeed));
+  if (keyPresses[' ']) {
+    //cam.add(new PVector(0, -playerSpeed, 0)); // flying
+    if (grounded) vel = new PVector(0, -20, 0); // jumping
+  }
+  if (keyPresses[256 + SHIFT]) cam.add(new PVector(0, playerSpeed, 0));
+  if (isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20))) ||
+      isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)))) {
+    cam = orig.copy();
+    vel = new PVector(0, 0, 0);
+  }
+  orig = cam.copy();
+  vel.add(new PVector(0, 5, 0));
+  cam.add(vel);
+  if (isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20))) ||
+      isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)))) {
+    cam = orig.copy();
+    vel = new PVector(0, 0, 0);
   }
   
   popMatrix();
@@ -127,7 +135,7 @@ private void generateChunk(long x, long z) {
   noiseSeed(seed);
   for (float i = 1; i >= 1./chunkSize; i /= 2) {
     for (int j = 0; j < chunkSize; j++) for (int k = 0; k < chunkSize; k++) {
-      m[j][k] += noise((x+j) / i / 50, (z+k) / i / 50) * i * 10;
+      m[j][k] += noise((x+j) / i / 50, (z+k) / i / 50) * i * generationHeight;
     }
   }
  
@@ -137,10 +145,17 @@ private void generateChunk(long x, long z) {
     for (int i = 0; i < h; i++) {
       chunk[i][j][k] = i == 0 ? BEDROCK : GRASS;
     }
-    for (int i = 1; i < 9; i++) {
+    for (int i = 1; i < waterHeight; i++) {
       if (chunk[i][j][k] == AIR) chunk[i][j][k] = WATER;
     }
+    
+    if (round(m[j][k]) >= waterHeight && noise((x+j), (z+k)) > .85) {
+      for (int i = round(m[j][k]); i < round(m[j][k]) + 3 + (int)random(3); i++) {
+        chunk[i][j][k] = OAK_WOOD;
+      }
+    }
   }
+  
   chunks.put(new PVector(x, z), chunk);
 }
 
@@ -151,4 +166,18 @@ public int getBlock(long x, long y, long z) {
   long cz = (long)((tz >= 0 ? tz : tz - chunkSize + 1) / chunkSize) * chunkSize; 
   var c = chunks.get(new PVector(cx, cz));
   return c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
+}
+
+public void keyPressed() {
+  if (key == CODED) keyPresses[256 + keyCode] = true;
+  else keyPresses[key] = true;
+}
+
+public void keyReleased() {
+  if (key == CODED) keyPresses[256 + keyCode] = false;
+  else keyPresses[key] = false;
+}
+
+public static boolean isSolid(int block) {
+  return block != AIR && block != WATER;
 }
