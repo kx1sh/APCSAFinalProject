@@ -1,4 +1,4 @@
-
+//
 // collision can be weird
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ public PVector cam;
 public PVector center = new PVector();
 public long seed;
 private static final int loadChunks = 1;
-private static final int chunkSize = 16;
+private static final int chunkSize = 16;//
 private static final int chunkHeight = 256;
 private PGraphics pg;
 private ArrayList<Creeper> creepers = new ArrayList<>();
