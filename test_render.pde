@@ -7,11 +7,13 @@ public long seed;
 private static final int loadChunks = 1;
 private static final int chunkSize = 16;
 private static final int chunkHeight = 256;
+private static final float playerSpeed = 5;
 private PGraphics pg;
+private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3;
 
 public void setup() {
   size(640*2, 360*2, P3D);
-  //noStroke();
+  noStroke();
   float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
   perspective(PI/3.0, (float)width/height, 1e-2, cameraZ*10.0);
   cam = new PVector(0, -500, 0);
@@ -23,8 +25,8 @@ public void draw() {
   pushMatrix();
 
   // https://gamedev.stackexchange.com/questions/68008/processing-implement-a-first-person-camera
-  float rotationAngle = map(mouseX, 0, width, 0+PI/10, TWO_PI);
-  float elevationAngle = map(mouseY, 0, height, 0, PI);
+  float rotationAngle = map(constrain(mouseX, 0, width), 0, width, 0, TWO_PI);
+  float elevationAngle = map(constrain(mouseY, 0, height), 0, height, 0+PI/10, PI-PI/10);
   center.x = cos(rotationAngle) * sin(elevationAngle);
   center.y = -cos(elevationAngle);
   center.z = sin(rotationAngle) * sin(elevationAngle);
@@ -49,10 +51,22 @@ public void draw() {
       for (int i = 0; i < chunkSize; i++) {
         pushMatrix();
         for (int j = 0; j < chunkSize; j++) {
-          fill(color(25+100+cx*3, 200+cz*2, chunkSize));
           pushMatrix();
           for (int h = 0; h < chunkHeight; h++) {
-            if (chunk[h][i][j] != 0) box(20);
+            int b = chunk[h][i][j];
+            if (b != AIR) {
+              fill(
+                b == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
+                b == BEDROCK ? color(100) :
+                color(0, 100, 150),
+                b == WATER ? 100 : 255
+              );
+              if (b == WATER) {
+                rotateX(-PI/2);
+                rect(-10, -10, 20, 20);
+                rotateX(PI/2);
+              } else box(20);
+            }
             translate(0, -20, 0);
           }
           popMatrix();
@@ -72,26 +86,26 @@ public void draw() {
     PVector orig = cam.copy();
     switch (key) {
       case 'w':
-        cam.add(new PVector(center.x, 0, center.z).normalize().mult(5));
+        cam.add(new PVector(center.x, 0, center.z).normalize().mult(playerSpeed));
         break;
       case 'a':
-        cam.add(new PVector(center.z, 0, -center.x).normalize().mult(5));
+        cam.add(new PVector(center.z, 0, -center.x).normalize().mult(playerSpeed));
         break;
       case 's':
-        cam.add(new PVector(-center.x, 0, -center.z).normalize().mult(5));
+        cam.add(new PVector(-center.x, 0, -center.z).normalize().mult(playerSpeed));
         break;
       case 'd':
-        cam.add(new PVector(-center.z, 0, center.x).normalize().mult(5));
+        cam.add(new PVector(-center.z, 0, center.x).normalize().mult(playerSpeed));
         break;
       case ' ':
-        cam.add(new PVector(0, -5, 0));
+        cam.add(new PVector(0, -playerSpeed, 0));
         break;
       case CODED:
-        if (keyCode == SHIFT) cam.add(new PVector(0, 5, 0));
+        if (keyCode == SHIFT) cam.add(new PVector(0, playerSpeed, 0));
         break;
     }
-    if (getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20)) != 0 ||
-        getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)) != 0) cam = orig.copy();
+    if (getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20)) == GRASS ||
+        getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)) == GRASS) cam = orig.copy();
   }
   
   popMatrix();
@@ -113,7 +127,7 @@ private void generateChunk(long x, long z) {
   noiseSeed(seed);
   for (float i = 1; i >= 1./chunkSize; i /= 2) {
     for (int j = 0; j < chunkSize; j++) for (int k = 0; k < chunkSize; k++) {
-      m[j][k] += noise((x+j) / i / 50, (z+k) / i / 50) * i * 3;
+      m[j][k] += noise((x+j) / i / 50, (z+k) / i / 50) * i * 10;
     }
   }
  
@@ -121,7 +135,10 @@ private void generateChunk(long x, long z) {
   for (int j = 0; j < chunkSize; j++) for (int k = 0; k < chunkSize; k++) {
     int h = round(m[j][k]);
     for (int i = 0; i < h; i++) {
-      chunk[i][j][k] = 1;
+      chunk[i][j][k] = i == 0 ? BEDROCK : GRASS;
+    }
+    for (int i = 1; i < 9; i++) {
+      if (chunk[i][j][k] == AIR) chunk[i][j][k] = WATER;
     }
   }
   chunks.put(new PVector(x, z), chunk);
