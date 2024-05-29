@@ -14,6 +14,8 @@ private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3, OAK_WOOD = 4;
 private static final int generationHeight = 10;
 private static final int waterHeight = 9;
 public boolean[] keyPresses;
+public int tick;
+public int selectedItemIndex;
 
 public void setup() {
   size(640*2, 360*2, P3D);
@@ -25,6 +27,8 @@ public void setup() {
   seed = (long)random(1 << 63);
   vel = new PVector(0, 0, 0);
   keyPresses = new boolean[512];
+  tick = 0;
+  selectedItemIndex = 0;
 }
 
 public void draw() {
@@ -119,12 +123,21 @@ public void draw() {
   popMatrix();
   hint(DISABLE_DEPTH_TEST);
   noLights();
-  pg = createGraphics(1000, 100);
+  pg = createGraphics(width, height);
   pg.beginDraw();
-  fill(255);
+  //fill(255);
   pg.textSize(50);
   pg.text(frameRate + " FPS", 10, 50);
   pg.text((long)(cam.x/20) + " " + (long)(-cam.y/20) + " " + (long)(cam.z/20), 10, 100);
+  pg.fill(0, 64);
+  pg.stroke(color(200));
+  pg.strokeWeight(8);
+  for (int i = (width - width/15*21/2)/2, ind = 0; i < width/15*11; i += width/15, ind++) {
+    pg.rect(i, height - width/15*7/6, width/15, width/15);
+  }
+  pg.stroke(color(255));
+  pg.strokeWeight(10);
+  pg.rect((width - width/15*21/2)/2 + width/15*selectedItemIndex, height - width/15*7/6, width/15, width/15);
   pg.endDraw();
   image(pg, 0, 0); 
   hint(ENABLE_DEPTH_TEST);
@@ -171,6 +184,8 @@ public int getBlock(long x, long y, long z) {
 public void keyPressed() {
   if (key == CODED) keyPresses[256 + keyCode] = true;
   else keyPresses[key] = true;
+  
+  if (key >= '0' && key <= '9') selectedItemIndex = (key - '0' + 9) % 10;
 }
 
 public void keyReleased() {
@@ -180,4 +195,8 @@ public void keyReleased() {
 
 public static boolean isSolid(int block) {
   return block != AIR && block != WATER;
+}
+
+public void mouseWheel(MouseEvent event) {
+  selectedItemIndex = (selectedItemIndex + event.getCount()) % 10;
 }
