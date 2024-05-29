@@ -167,6 +167,7 @@ public int getBlock(long x, long y, long z) {
   var c = chunks.get(new PVector(cx, cz));
   return c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
 }
+public int getBlockPvector(PVector t) {return getBlock((long)t.x, (long)t.y, (long)t.z);}
 
 public void keyPressed() {
   if (key == CODED) keyPresses[256 + keyCode] = true;
@@ -181,3 +182,21 @@ public void keyReleased() {
 public static boolean isSolid(int block) {
   return block != AIR && block != WATER;
 }
+
+/*public Block isBreaking(){
+  PVector p = pos.copy();
+if (mousePressed && mouseButton == RIGHT) {
+ for(int i=0; i<2; ++i) {
+   for(int j=0; j<2; ++j) {
+     for(int k=0; k<2; ++k) {
+       if(getBlockPvector(p.add(new PVector(i, j, k)))){
+         setBlock(p.add(i, j, k), 0);
+         Block t = getBlock(p);
+         setBlock(p.add(i, j, k), 0);
+         return t; 
+       }
+     }
+   }
+ }
+}
+}*/
