@@ -1,21 +1,23 @@
-// collision can be weird
-
 private HashMap<PVector, int[][][]> chunks = new HashMap<>();
 public PVector cam;
 public PVector center = new PVector();
 public long seed;
 public PVector vel;
+private PGraphics pg;
+public boolean[] keyPresses;
+public int tick;
+public int selectedItemIndex;
+public int[] inventory;
+
 private static final int loadChunks = 2;
 private static final int chunkSize = 16;
 private static final int chunkHeight = 256;
 private static final float playerSpeed = 15;
-private PGraphics pg;
 private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3, OAK_WOOD = 4;
 private static final int generationHeight = 10;
 private static final int waterHeight = 9;
-public boolean[] keyPresses;
-public int tick;
-public int selectedItemIndex;
+private final int NOON=color(0, 180, 216), MIDNIGHT=color(0, 20, 50), RED_SKY=color(200, 100, 0);
+private static final int dayLength = 2400;
 
 public void setup() {
   size(640*2, 360*2, P3D);
@@ -32,7 +34,13 @@ public void setup() {
 }
 
 public void draw() {
-  background(0, 180, 216);
+  int skyColor = 
+    tick < 600 ? lerpColor(NOON, RED_SKY, tick/600.) :
+    tick < 1200 ? lerpColor(RED_SKY, MIDNIGHT, (tick - 600)/600.) :
+    tick < 1800 ? lerpColor(MIDNIGHT, RED_SKY, (tick - 1200)/600.) :
+    lerpColor(RED_SKY, NOON, (tick - 1800)/600.);
+  
+  background(skyColor);
   pushMatrix();
 
   // https://gamedev.stackexchange.com/questions/68008/processing-implement-a-first-person-camera
@@ -44,7 +52,7 @@ public void draw() {
   camera(cam.x, cam.y, cam.z, cam.x+center.x, cam.y+center.y, cam.z+center.z, 0, 1, 0);
   
   ambientLight(100, 100, 128);
-  directionalLight(0, 180, 216, 0, 1, 0);
+  directionalLight(red(skyColor), green(skyColor), blue(skyColor), 0, 1, 0);
   lightFalloff(1.0, 0.0, 0.0);
   lightSpecular(255, 255, 255);
   
@@ -132,15 +140,17 @@ public void draw() {
   pg.fill(0, 64);
   pg.stroke(color(200));
   pg.strokeWeight(8);
-  for (int i = (width - width/15*21/2)/2, ind = 0; i < width/15*11; i += width/15, ind++) {
-    pg.rect(i, height - width/15*7/6, width/15, width/15);
+  for (int i = 0, ind = 0; i < width/15*10; i += width/15, ind++) {
+    if (ind != selectedItemIndex) pg.rect((width - width/15*19/2)/2 + i, height - width/15*7/6, width/15, width/15);
   }
   pg.stroke(color(255));
   pg.strokeWeight(10);
-  pg.rect((width - width/15*21/2)/2 + width/15*selectedItemIndex, height - width/15*7/6, width/15, width/15);
+  pg.rect((width - width/15*19/2)/2 + width/15*selectedItemIndex, height - width/15*7/6, width/15, width/15);
   pg.endDraw();
   image(pg, 0, 0); 
   hint(ENABLE_DEPTH_TEST);
+  
+  tick = (tick + 3) % dayLength;
 }
 
 private void generateChunk(long x, long z) {
@@ -198,5 +208,5 @@ public static boolean isSolid(int block) {
 }
 
 public void mouseWheel(MouseEvent event) {
-  selectedItemIndex = (selectedItemIndex + event.getCount()) % 10;
+  selectedItemIndex = (selectedItemIndex + event.getCount() + 20) % 10;
 }
