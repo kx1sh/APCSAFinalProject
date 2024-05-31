@@ -16,7 +16,7 @@ private static final float playerSpeed = 15;
 private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3, OAK_WOOD = 4;
 private static final int generationHeight = 10;
 private static final int waterHeight = 9;
-private final int NOON=color(0, 180, 216), MIDNIGHT=color(0, 20, 50), RED_SKY=color(200, 100, 0);
+private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
 private static final int dayLength = 2400;
 
 public void setup() {
@@ -34,11 +34,10 @@ public void setup() {
 }
 
 public void draw() {
+  float sunHeight = cos(tick * TWO_PI / dayLength);
   int skyColor = 
-    tick < 600 ? lerpColor(NOON, RED_SKY, tick/600.) :
-    tick < 1200 ? lerpColor(RED_SKY, MIDNIGHT, (tick - 600)/600.) :
-    tick < 1800 ? lerpColor(MIDNIGHT, RED_SKY, (tick - 1200)/600.) :
-    lerpColor(RED_SKY, NOON, (tick - 1800)/600.);
+    sunHeight >= 0 ? lerpColor(RED_SKY, NOON, sunHeight) :
+    lerpColor(RED_SKY, MIDNIGHT, -sunHeight);
   
   background(skyColor);
   pushMatrix();
@@ -150,7 +149,7 @@ public void draw() {
   image(pg, 0, 0); 
   hint(ENABLE_DEPTH_TEST);
   
-  tick = (tick + 3) % dayLength;
+  tick = (tick + 10) % dayLength;
 }
 
 private void generateChunk(long x, long z) {
