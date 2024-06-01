@@ -1,21 +1,22 @@
+import com.jogamp.newt.opengl.GLWindow;
+
 private HashMap<PVector, int[][][]> chunks = new HashMap<>();
 public PVector cam;
 public PVector center = new PVector();
 public long seed;
 public PVector vel;
 private PGraphics pg;
-public boolean[] keyPresses;
+private boolean[] keyPresses;
 public int tick;
 public int selectedItemIndex;
 public int[] inventory;
+private float mx, my;
+private GLWindow r;
 
-private static final int loadChunks = 2;
-private static final int chunkSize = 16;
-private static final int chunkHeight = 256;
+private static final int loadChunks = 2, chunkSize = 16;
+private static final int chunkHeight = 256, generationHeight = 1, waterHeight = 0;
 private static final float playerSpeed = 15;
 private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3, OAK_WOOD = 4;
-private static final int generationHeight = 10;
-private static final int waterHeight = 9;
 private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
 private static final int dayLength = 2400;
 
@@ -31,6 +32,13 @@ public void setup() {
   keyPresses = new boolean[512];
   tick = 0;
   selectedItemIndex = 0;
+  
+  // https://twicetwo.com/blog/processing/2016/03/01/processing-locking-the-mouse.html
+  r = (GLWindow)surface.getNative();
+  r.confinePointer(true);
+  //r.setPointerVisible(false);
+  r.warpPointer(width/2,height/2);
+  mx = mouseX; my = mouseY;
 }
 
 public void draw() {
@@ -43,8 +51,8 @@ public void draw() {
   pushMatrix();
 
   // https://gamedev.stackexchange.com/questions/68008/processing-implement-a-first-person-camera
-  float rotationAngle = map(constrain(mouseX, 0, width), 0, width, 0, TWO_PI);
-  float elevationAngle = map(constrain(mouseY, 0, height), 0, height, 0+PI/10, PI-PI/10);
+  float rotationAngle = map(mx, 0, width, 0, TWO_PI);
+  float elevationAngle = map(my, 0, height, 0+PI/10, PI-PI/10);
   center.x = cos(rotationAngle) * sin(elevationAngle);
   center.y = -cos(elevationAngle);
   center.z = sin(rotationAngle) * sin(elevationAngle);
@@ -120,6 +128,7 @@ public void draw() {
   }
   orig = cam.copy();
   vel.add(new PVector(0, 5, 0));
+  vel.limit(20);
   cam.add(vel);
   if (isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20), (int)(cam.z/20))) ||
       isSolid(getBlock((int)(cam.x/20), (int)(cam.y/20)+1, (int)(cam.z/20)))) {
@@ -133,9 +142,10 @@ public void draw() {
   pg = createGraphics(width, height);
   pg.beginDraw();
   //fill(255);
-  pg.textSize(50);
-  pg.text(frameRate + " FPS", 10, 50);
-  pg.text((long)(cam.x/20) + " " + (long)(-cam.y/20) + " " + (long)(cam.z/20), 10, 100);
+  pg.textSize(20);
+  pg.text(frameRate + " FPS", 10, 20);
+  pg.text((long)(cam.x/20) + " " + (long)(-cam.y/20) + " " + (long)(cam.z/20), 10, 40);
+  pg.text(frameRate + " FPS", 10, 20);
   pg.fill(0, 64);
   pg.stroke(color(200));
   pg.strokeWeight(8);
@@ -149,7 +159,15 @@ public void draw() {
   image(pg, 0, 0); 
   hint(ENABLE_DEPTH_TEST);
   
-  tick = (tick + 10) % dayLength;
+  tick = (tick + 1) % dayLength;
+}
+
+public void mouseMoved(MouseEvent event) {
+  mx += event.getX() - width/2;
+  mx %= width;
+  my += event.getY() - height/2;
+  my = constrain(my, 0, height);
+  r.warpPointer(width/2,height/2);
 }
 
 private void generateChunk(long x, long z) {
