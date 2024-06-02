@@ -1,4 +1,5 @@
 import com.jogamp.newt.opengl.GLWindow;
+import static java.lang.Math.*;
 
 public class World {
   private HashMap<PVector, Block[][][]> chunks = new HashMap<>();
@@ -9,8 +10,8 @@ public class World {
   private int tick;
   private GLWindow window;
   
-  private static final int loadChunks = 1, chunkSize = 16;
-  private static final int chunkHeight = 256, generationHeight = 3, waterHeight = 2;
+  private static final int loadChunks = 0, chunkSize = 16;
+  private static final int chunkHeight = 256, generationHeight = 3, waterHeight = 2, baseHeight = 2;
   private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
   private static final int dayLength = 2400;
   
@@ -44,12 +45,14 @@ public class World {
     
     // https://gamedev.stackexchange.com/questions/68008/processing-implement-a-first-person-camera
     player.update();
-    PVector center = player.getDir();
+    PVector hit = player.getHit();
+    PVector dir = player.getDir();
     PVector cam = player.getPos().copy().add(new PVector(0, -1*blockSize, 0));
-    camera(cam.x, cam.y, cam.z, cam.x+center.x, cam.y+center.y, cam.z+center.z, 0, 1, 0);
+    camera(cam.x, cam.y, cam.z, cam.x+dir.x, cam.y+dir.y, cam.z+dir.z, 0, 1, 0);
     
     ambientLight(100, 100, 128);
-    directionalLight(red(skyColor), green(skyColor), blue(skyColor), 0, 1, 0);
+    PVector sunlightDir = new PVector(0, 1).rotate(tick * TWO_PI / dayLength);
+    directionalLight(red(skyColor), green(skyColor), blue(skyColor), sunlightDir.x, sunlightDir.y, 0);
     lightFalloff(1.0, 0.0, 0.0);
     lightSpecular(255, 255, 255);
     
@@ -71,6 +74,8 @@ public class World {
             for (int h = 0; h < chunkHeight; h++) {
               Block b = chunk[h][i][j];
               if (b.getType() != AIR) {
+                boolean isHit = hit != null && new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag() < .5;
+                if (isHit) stroke(1);
                 fill(
                   b.getType() == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
                   b.getType() == BEDROCK ? color(100) :
@@ -80,10 +85,11 @@ public class World {
                 );
                 if (b.getType() == WATER) {
                   pushMatrix();
-                  rotateX(-PI/2);
+                  rotateX(-HALF_PI);
                   rect(-blockSize/2, -blockSize/2, blockSize, blockSize);
                   popMatrix();
                 } else box(blockSize);
+                if (isHit) noStroke();
               }
               translate(0, -blockSize, 0);
             }
@@ -124,7 +130,7 @@ public class World {
     image(pg, 0, 0); 
     hint(ENABLE_DEPTH_TEST);
     
-    tick = (tick + 1) % dayLength;
+    tick = (tick + 10) % dayLength;
   }
   
   private void generateChunk(long x, long z) {
@@ -138,7 +144,7 @@ public class World {
    
     Block[][][] chunk = new Block[chunkHeight][chunkSize][chunkSize];
     for (int j = 0; j < chunkSize; j++) for (int k = 0; k < chunkSize; k++) {
-      int h = round(m[j][k]);
+      int h = round(m[j][k]) + baseHeight;
       for (int i = 0; i < chunkHeight; i++) {
         chunk[i][j][k] = new Block(i >= h ? AIR : i == 0 ? BEDROCK : GRASS, new PVector(x+j-8 , -i, z+k-8), this);
       }
@@ -155,7 +161,6 @@ public class World {
     
     chunks.put(new PVector(x, z), chunk);
   }
-  
   public Block getBlock(long x, long y, long z) {
     if (y > 0) return new Block(AIR, new PVector(x, y, z), this);
     long tx = x + chunkSize/2, tz = z + chunkSize/2;
@@ -164,5 +169,14 @@ public class World {
     var c = chunks.get(new PVector(cx, cz));
     if (c == null) return new Block(AIR, new PVector(x, y, z), this);
     return c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
+  }
+  public void setBlock(long x, long y, long z, int type, int state) {
+    if (y > 0) return;
+    long tx = x + chunkSize/2, tz = z + chunkSize/2;
+    long cx = (long)((tx >= 0 ? tx : tx - chunkSize + 1) / chunkSize) * chunkSize;
+    long cz = (long)((tz >= 0 ? tz : tz - chunkSize + 1) / chunkSize) * chunkSize; 
+    var c = chunks.get(new PVector(cx, cz));
+    if (c == null) return;
+    c[(int)-y][(int)(tx - cx)][(int)(tz - cz)] = new Block(type, state, new PVector(x, y, z), this);
   }
 }

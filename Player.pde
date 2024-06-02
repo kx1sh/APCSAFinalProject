@@ -3,9 +3,12 @@ public class Player extends Entity {
   private Item[] inventory;
   private boolean[] keyPresses;
   private float mx, my;
+  private PVector hit;
+  private PVector preHit;
   
   private static final float playerSpeed = 15;
   private static final float mouseSensitivity = .2;
+  private static final float reach = 4;
   
   public Player(float h, PVector d, PVector p, PVector v, World w) {
     super(h, d, p, v, w);
@@ -16,6 +19,7 @@ public class Player extends Entity {
   }
   
   public byte getSelectedItemIndex() {return selectedItemIndex;}
+  public PVector getHit() {return hit;}
   
   @Override
   public void update() {
@@ -23,6 +27,45 @@ public class Player extends Entity {
     float elevationAngle = map(my, 0, height, 0+PI/10, PI-PI/10);
     PVector dir = new PVector(cos(rotationAngle) * sin(elevationAngle), -cos(elevationAngle), sin(rotationAngle) * sin(elevationAngle));
     setDir(dir);
+    
+    // http://www.cse.yorku.ca/~amana/research/grid.pdf
+    hit = null;
+    PVector cam = getPos().copy().add(new PVector(0, -1*blockSize, 0));
+    float x = cam.x/blockSize, y = cam.y/blockSize, z = cam.z/blockSize;
+    float stepX = signum(dir.x), stepY = signum(dir.y), stepZ = signum(dir.z);
+    float tMaxX = ((stepX > 0 ? ceil(x+.5) : floor(x+.5))-.5-x)/dir.x;
+    float tMaxY = ((stepY > 0 ? ceil(y+.5) : floor(y+.5))-.5-y)/dir.y;
+    float tMaxZ = ((stepZ > 0 ? ceil(z+.5) : floor(z+.5))-.5-z)/dir.z;
+    float tDeltaX = 1/abs(dir.x);
+    float tDeltaY = 1/abs(dir.y);
+    float tDeltaZ = 1/abs(dir.z);
+    do {
+      preHit = new PVector(x, y, z);
+      if(tMaxX < tMaxY) {
+        if(tMaxX < tMaxZ) {
+          x += stepX;
+          if(abs(x - cam.x/20) > reach) break;
+          tMaxX= tMaxX + tDeltaX;
+        } else {
+          z += stepZ;
+          if(abs(z - cam.z/20) > reach) break;
+          tMaxZ= tMaxZ + tDeltaZ;
+        }
+      } else {
+        if(tMaxY < tMaxZ) {
+          y += stepY;
+          if(abs(y - cam.y/20) > reach) break;
+          tMaxY= tMaxY + tDeltaY;
+        } else {
+          z += stepZ;
+          if(abs(z - cam.z/20) > reach) break;
+          tMaxZ= tMaxZ + tDeltaZ;
+        }
+      }
+      Block b = world.getBlock((long)x, (long)y, (long)z);
+      if (b.isSolid()) hit = new PVector(x, y, z);
+    } while (hit == null);
+    if (hit != null && hit.copy().sub(cam.div(20)).mag() > reach) hit = null;
     
     boolean grounded = getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+1, (int)(getPos().z/blockSize)).isSolid();
     PVector inDir = new PVector();
@@ -57,5 +100,14 @@ public class Player extends Entity {
     my += (event.getY() - height/2) * mouseSensitivity;
     my = constrain(my, 0, height);
     world.getWindow().warpPointer(width/2,height/2);
+  }
+  public void mousePressed(MouseEvent event) {
+    if (hit != null) {
+      if (event.getButton() == 37) // left click
+        world.setBlock((long)(hit.x), (long)(hit.y), (long)(hit.z), AIR, 0);
+      else if (event.getButton() == 39) { // right click
+        world.setBlock((long)(preHit.x), (long)(preHit.y), (long)(preHit.z), BEDROCK, 0);
+      }
+    }
   }
 }
