@@ -18,7 +18,7 @@ public void setup() {
   background.resize(2*640, 2*360);
   menumaker = new ControlP5(this);
   menumaker.addButton("play").setPosition(width/2-50, height/2-(50*9/16)).setSize(100, 50).setLabel("Play").getCaptionLabel().setFont(font).setSize(28);
-  menumaker.addButton("exit").setPosition(width/2-50, height/2+(50*9/16)).setSize(100, 50).setLabel("Exit").getCaptionLabel().setFont(font).setSize(28);
+  menumaker.addButton("exxit").setPosition(width/2-50, height/2+(50*9/16)).setSize(100, 50).setLabel("Exit").getCaptionLabel().setFont(font).setSize(28);
   world = new World();
 }
 
@@ -37,7 +37,7 @@ public void draw() {
   if (world != null) world.draw();
 }}
 public void play(){menuq = false; menumaker.hide();}
-public void exit(){exit();}
+public void exxit(){exit();}
 
 public void keyPressed() {
   if (!menuq && world != null) world.getPlayer().keyPressed();
