@@ -10,8 +10,8 @@ public class World {
   private int tick;
   private GLWindow window;
   
-  private static final int loadChunks = 0, chunkSize = 16;
-  private static final int chunkHeight = 256, generationHeight = 3, waterHeight = 2, baseHeight = 2;
+  private static final int loadChunks = 1, chunkSize = 16;
+  private static final int chunkHeight = 256, generationHeight = 10, waterHeight = 9, baseHeight = 2;
   private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
   private static final int dayLength = 2400;
   
@@ -130,7 +130,7 @@ public class World {
     image(pg, 0, 0); 
     hint(ENABLE_DEPTH_TEST);
     
-    tick = (tick + 10) % dayLength;
+    tick = (tick + 1) % dayLength;
   }
   
   private void generateChunk(long x, long z) {

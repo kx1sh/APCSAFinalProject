@@ -6,7 +6,7 @@ public class Player extends Entity {
   private PVector hit;
   private PVector preHit;
   
-  private static final float playerSpeed = 15;
+  private static final float playerSpeed = 5;
   private static final float mouseSensitivity = .2;
   private static final float reach = 4;
   
