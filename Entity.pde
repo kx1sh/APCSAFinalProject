@@ -3,7 +3,7 @@ public class Entity {
   private PVector dir, pos, vel;
   private World world;
   
-  private static final float terminalVel = 40;
+  private static final float terminalVel = 20;
   
   public Entity(float h, PVector d, PVector p, PVector v, World w) {
     hp = h; dir = d; pos = p; vel = v; world = w;

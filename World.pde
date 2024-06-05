@@ -11,7 +11,7 @@ public class World {
   private GLWindow window;
   
   private static final int loadChunks = 1, chunkSize = 16;
-  private static final int chunkHeight = 256, generationHeight = 10, waterHeight = 9, baseHeight = 2;
+  private static final int chunkHeight = 256, generationHeight = 1, waterHeight = 1, baseHeight = 2, treeBaseHeight = 3;
   private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
   private static final int dayLength = 2400;
   
@@ -74,13 +74,14 @@ public class World {
             for (int h = 0; h < chunkHeight; h++) {
               Block b = chunk[h][i][j];
               if (b.getType() != AIR) {
-                boolean isHit = hit != null && new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag() < .5;
+                boolean isHit = hit != null && new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag() < 1;
                 if (isHit) stroke(1);
                 fill(
                   b.getType() == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
                   b.getType() == BEDROCK ? color(100) :
                   b.getType() == WATER ? color(0, 100, 150) :
-                  color(180, 150, 0),
+                  b.getType() == OAK_WOOD ? color(180, 150, 0) :
+                  color(0),
                   b.getType() == WATER ? 200 : 255
                 );
                 if (b.getType() == WATER) {
@@ -153,7 +154,7 @@ public class World {
       }
       
       if (round(m[j][k]) >= waterHeight && noise((x+j), (z+k)) > .85) {
-        for (int i = round(m[j][k]); i < round(m[j][k]) + 3 + (int)random(3); i++) {
+        for (int i = round(m[j][k]) + baseHeight; i < round(m[j][k]) + baseHeight + treeBaseHeight + (int)random(3); i++) {
           chunk[i][j][k] = new Block(OAK_WOOD, new PVector(x+j-8, -i, z+k-8), this);
         }
       }
