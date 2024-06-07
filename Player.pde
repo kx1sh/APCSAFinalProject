@@ -10,7 +10,8 @@ public class Player extends Entity {
   private static final float playerSpeed = 5;
   private static final float jumpVel = 20;
   private static final float mouseSensitivity = .2;
-  private static final float reach = 4;
+  private static final float reach = 400;
+  private static final float headRadius = 5;
   
   public Player(float h, PVector d, PVector p, PVector v, World w) {
     super(h, d, p, v, w);
@@ -23,6 +24,7 @@ public class Player extends Entity {
   
   public byte getSelectedItemIndex() {return selectedItemIndex;}
   public PVector getHit() {return hit;}
+  public PVector getPreHit() {return preHit;}
   
   @Override
   public void update() {
@@ -33,7 +35,7 @@ public class Player extends Entity {
     
     // http://www.cse.yorku.ca/~amana/research/grid.pdf
     hit = null;
-    PVector cam = getPos().copy().add(new PVector(0, -1*blockSize, 0));
+    PVector cam = getPos().copy().add(new PVector(0, -1*blockSize, 0)).add(dir.copy().mult(headRadius));
     float x = cam.x/blockSize, y = cam.y/blockSize, z = cam.z/blockSize;
     float stepX = signum(dir.x), stepY = signum(dir.y), stepZ = signum(dir.z);
     float tMaxX = ((stepX > 0 ? ceil(x+.5) : floor(x+.5))-.5-x)/dir.x;
@@ -71,6 +73,7 @@ public class Player extends Entity {
     if (hit != null && hit.copy().sub(cam.div(20)).mag() > reach) hit = null;
     
     if (!grounded && getVel().y > 0 && getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+2, (int)(getPos().z/blockSize)).isSolid()) grounded = true;
+    if (grounded && !getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+2, (int)(getPos().z/blockSize)).isSolid()) grounded = false;
     PVector inDir = new PVector();
     if (keyPresses['w']) inDir.add(new PVector(dir.x, 0, dir.z).normalize().mult(playerSpeed));
     if (keyPresses['a']) inDir.add(new PVector(dir.z, 0, -dir.x).normalize().mult(playerSpeed));

@@ -47,7 +47,7 @@ public class World {
     player.update();
     PVector hit = player.getHit();
     PVector dir = player.getDir();
-    PVector cam = player.getPos().copy().add(new PVector(0, -1*blockSize, 0));
+    PVector cam = player.getPos().copy().add(new PVector(0, -1*blockSize, 0)).add(dir.copy().mult(5));
     camera(cam.x, cam.y, cam.z, cam.x+dir.x, cam.y+dir.y, cam.z+dir.z, 0, 1, 0);
     
     ambientLight(100, 100, 128);
@@ -73,9 +73,15 @@ public class World {
             pushMatrix();
             for (int h = 0; h < chunkHeight; h++) {
               Block b = chunk[h][i][j];
+              if (random(1) < 0.5) b = getBlock(cx + i - chunkSize/2, -h, cz + j - chunkSize/2);
               if (b.getType() != AIR) {
-                boolean isHit = hit != null && new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag() < 1;
-                if (isHit) stroke(1);
+                boolean isHit = false;
+                float mag = 0;
+                if (hit != null) {
+                  mag = new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag();
+                  isHit = mag < 1;
+                  if (isHit) {stroke(0); strokeWeight(1); println(tick + " " + new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2));}
+                }
                 fill(
                   b.getType() == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
                   b.getType() == BEDROCK ? color(100) :
@@ -90,6 +96,8 @@ public class World {
                   rect(-blockSize/2, -blockSize/2, blockSize, blockSize);
                   popMatrix();
                 } else box(blockSize);
+                textSize(5);
+                text(mag, 0, -20);
                 if (isHit) noStroke();
               }
               translate(0, -blockSize, 0);
@@ -116,7 +124,8 @@ public class World {
     pg.textSize(20);
     pg.text(frameRate + " FPS", 10, 20);
     pg.text((long)(cam.x/blockSize) + " " + (long)(-cam.y/blockSize) + " " + (long)(cam.z/blockSize), 10, 40);
-    pg.text(frameRate + " FPS", 10, 20);
+    pg.text(tick, 10, 60);
+    pg.text("hit: " + hit + ", preHit: " + player.getPreHit(), 10, 80);
     pg.fill(0, 64);
     pg.stroke(color(200));
     pg.strokeWeight(8);
