@@ -5,10 +5,8 @@ public class Player extends Entity {
   private float mx, my;
   private PVector hit;
   private PVector preHit;
-  private boolean grounded;
-  
-  private static final float playerSpeed = 5;
-  private static final float jumpVel = 20;
+ 
+  private float playerSpeed = 5;
   private static final float mouseSensitivity = .2;
   private static final float reach = 4;
   
@@ -18,16 +16,16 @@ public class Player extends Entity {
     keyPresses = new boolean[512];
     selectedItemIndex = 0;
     mx = width/2; my = height/2;
-    grounded = false;
   }
-  
+  public float getSpeed(){return playerSpeed;}
+  public void setSpeed(float s) {playerSpeed = s;}
   public byte getSelectedItemIndex() {return selectedItemIndex;}
   public PVector getHit() {return hit;}
   
   @Override
   public void update() {
     float rotationAngle = map(mx, 0, width, 0, TWO_PI);
-    float elevationAngle = map(my, 0, height, 0+PI/20, PI-PI/20);
+    float elevationAngle = map(my, 0, height, 0+PI/10, PI-PI/10);
     PVector dir = new PVector(cos(rotationAngle) * sin(elevationAngle), -cos(elevationAngle), sin(rotationAngle) * sin(elevationAngle));
     setDir(dir);
     
@@ -70,7 +68,7 @@ public class Player extends Entity {
     } while (hit == null);
     if (hit != null && hit.copy().sub(cam.div(20)).mag() > reach) hit = null;
     
-    if (!grounded && getVel().y > 0 && getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+2, (int)(getPos().z/blockSize)).isSolid()) grounded = true;
+    boolean grounded = getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+1, (int)(getPos().z/blockSize)).isSolid();
     PVector inDir = new PVector();
     if (keyPresses['w']) inDir.add(new PVector(dir.x, 0, dir.z).normalize().mult(playerSpeed));
     if (keyPresses['a']) inDir.add(new PVector(dir.z, 0, -dir.x).normalize().mult(playerSpeed));
@@ -78,10 +76,7 @@ public class Player extends Entity {
     if (keyPresses['d']) inDir.add(new PVector(-dir.z, 0, dir.x).normalize().mult(playerSpeed));
     if (keyPresses[' ']) {
       //inDir.add(new PVector(0, -playerSpeed, 0)); // flying
-      if (grounded) {
-        setVel(new PVector(0, -jumpVel, 0)); // jumping
-        grounded = false;
-      }
+      if (grounded) setVel(new PVector(0, -blockSize, 0)); // jumping
     }
     if (keyPresses[256 + SHIFT]) inDir.add(new PVector(0, playerSpeed, 0));
     move(inDir.normalize().mult(playerSpeed), true);
