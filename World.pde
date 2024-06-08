@@ -73,7 +73,7 @@ public class World {
             pushMatrix();
             for (int h = 0; h < chunkHeight; h++) {
               Block b = chunk[h][i][j];
-              if (random(1) < 0.5) b = getBlock(cx + i - chunkSize/2, -h, cz + j - chunkSize/2);
+              //if (random(1) < 0.5) b = getBlock(cx + i - chunkSize/2, -h, cz + j - chunkSize/2);
               if (b.getType() != AIR) {
                 boolean isHit = false;
                 float mag = 0;
@@ -88,7 +88,7 @@ public class World {
                   b.getType() == WATER ? color(0, 100, 150) :
                   b.getType() == OAK_WOOD ? color(180, 150, 0) :
                   color(0),
-                  b.getType() == WATER ? 200 : 255
+                  b.getType() == WATER ? 200 : 200
                 );
                 if (b.getType() == WATER) {
                   pushMatrix();
@@ -96,9 +96,23 @@ public class World {
                   rect(-blockSize/2, -blockSize/2, blockSize, blockSize);
                   popMatrix();
                 } else box(blockSize);
-                textSize(5);
-                text(mag, 0, -20);
+                //textSize(5);
+                //text(mag, 0, -20);
                 if (isHit) noStroke();
+              } else {
+                boolean isHit = false;
+                float mag = 0;
+                if (hit != null) {
+                  mag = new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag();
+                  isHit = mag < 1;
+                  if (isHit) {
+                    PVector diff = new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(hit);
+                    println(diff);
+                    translate(-diff.x, -diff.y, -diff.z);
+                    sphere(2);
+                    translate(diff.x, diff.y, diff.z);
+                  }
+                }
               }
               translate(0, -blockSize, 0);
             }

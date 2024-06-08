@@ -5,10 +5,11 @@ public class Player extends Entity {
   private float mx, my;
   private PVector hit;
   private PVector preHit;
+  private boolean grounded;
  
   private float playerSpeed = 5;
   private static final float mouseSensitivity = .2;
-  private static final float reach = 400;
+  private static final float reach = 40;
   private static final float headRadius = 5;
   
   public Player(float h, PVector d, PVector p, PVector v, World w) {
@@ -66,7 +67,7 @@ public class Player extends Entity {
         }
       }
       Block b = world.getBlock((long)x, (long)y, (long)z);
-      if (b.isSolid()) hit = new PVector(x, y, z);
+      if (b.isSolid()) hit = new PVector(x, y, z).add(dir);
     } while (hit == null);
     if (hit != null && hit.copy().sub(cam.div(20)).mag() > reach) hit = null;
     
