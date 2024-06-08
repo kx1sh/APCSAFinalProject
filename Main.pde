@@ -31,9 +31,16 @@ public void draw() {
    textSize(20);
    text("by Edmund and Krish", width/2, height/2-140);
   }
-  else {
-  if (world != null) world.draw();
-}}
+ else { if (world != null) {world.draw(); crossHair();}}}
+public void crossHair() {
+  hint(DISABLE_DEPTH_TEST);
+  stroke(255,0,0);
+  strokeWeight(1.3);
+  line(width/2, (height-30)/2, width/2, (height+30)/2);
+  line((width-30)/2, height/2, (width+30)/2, height/2);
+  hint(ENABLE_DEPTH_TEST);
+  noStroke();
+}
 public void play(){menuq = false; menumaker.hide(); world = new World();}
 public void exxit(){exit();}
 
