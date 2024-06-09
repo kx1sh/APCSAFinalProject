@@ -18,8 +18,17 @@ public void setup() {
   menumaker = new ControlP5(this);
   menumaker.addButton("play").setPosition(width/2-50, height/2-(50*9/16)).setSize(100, 50).setLabel("Play").getCaptionLabel().setFont(font).setSize(28);
   menumaker.addButton("exxit").setPosition(width/2-50, height/2+(50*9/16)).setSize(100, 50).setLabel("Exit").getCaptionLabel().setFont(font).setSize(28);
+menumaker.addButton("backToMenuu").setPosition(50, height-70).setSize(100, 30).setLabel("back to menu").getCaptionLabel().setFont(font).setSize(12).hide();
 }
-
+public void backToMenuu(){
+  hint(DISABLE_DEPTH_TEST);
+ menuq = true;
+ if(world!=null) world=null;
+ menumaker.show();
+ menumaker.getController("backToMenuu").hide();
+ hint(ENABLE_DEPTH_TEST);
+  noStroke();
+}
 public void draw() {
   if (menuq){
    background(background);
