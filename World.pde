@@ -10,8 +10,8 @@ public class World {
   private int tick;
   private GLWindow window;
   
-  private static final int loadChunks = 0, chunkSize = 16;
-  private static final int chunkHeight = 256, generationHeight = 1, waterHeight = 1, baseHeight = 2, treeBaseHeight = 3;
+  private static final int loadChunks = 1, chunkSize = 16;
+  private static final int chunkHeight = 256, generationHeight = 10, waterHeight = 9, baseHeight = 2, treeBaseHeight = 5;
   private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
   private static final int dayLength = 2400;
   

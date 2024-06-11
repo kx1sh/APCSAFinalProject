@@ -7,7 +7,7 @@ public class Player extends Entity {
   private PVector preHit;
   private boolean grounded;
  
-  private float playerSpeed = 5;
+  private float playerSpeed = 7;
   private static final float mouseSensitivity = .2;
   private static final float reach = 4;
   private static final float headRadius = 5;
@@ -28,7 +28,7 @@ public class Player extends Entity {
   @Override
   public void update() {
     float rotationAngle = map(mx, 0, width, 0, TWO_PI);
-    float elevationAngle = map(my, 0, height, 0+PI/10, PI-PI/10);
+    float elevationAngle = map(my, 0, height, 0+PI/20, PI-PI/20);
     PVector dir = new PVector(cos(rotationAngle) * sin(elevationAngle), -cos(elevationAngle), sin(rotationAngle) * sin(elevationAngle));
     setDir(dir);
     
@@ -36,40 +36,44 @@ public class Player extends Entity {
     hit = null;
     PVector cam = getPos().copy().add(new PVector(0, -1*blockSize, 0)).add(dir.copy().mult(headRadius));
     float x = cam.x/blockSize, y = cam.y/blockSize, z = cam.z/blockSize;
-    float stepX = signum(dir.x), stepY = signum(dir.y), stepZ = signum(dir.z);
-    float tMaxX = ((stepX > 0 ? ceil(x+.5) : floor(x+.5))-.5-x)/dir.x;
-    float tMaxY = ((stepY > 0 ? ceil(y+.5) : floor(y+.5))-.5-y)/dir.y;
-    float tMaxZ = ((stepZ > 0 ? ceil(z+.5) : floor(z+.5))-.5-z)/dir.z;
-    float tDeltaX = 1/abs(dir.x);
-    float tDeltaY = 1/abs(dir.y);
-    float tDeltaZ = 1/abs(dir.z);
-    do {
-      preHit = new PVector(x, y, z);
-      if(tMaxX < tMaxY) {
-        if(tMaxX < tMaxZ) {
-          x += stepX;
-          if(abs(x - cam.x/blockSize) > reach) break;
-          tMaxX= tMaxX + tDeltaX;
+    if (world.getBlock(round(x), round(y), round(z)).isSolid()) {
+      hit = new PVector(x, y, z);
+    } else {
+      float stepX = signum(dir.x), stepY = signum(dir.y), stepZ = signum(dir.z);
+      float tMaxX = ((stepX > 0 ? ceil(x+.5) : floor(x+.5))-.5-x)/dir.x;
+      float tMaxY = ((stepY > 0 ? ceil(y+.5) : floor(y+.5))-.5-y)/dir.y;
+      float tMaxZ = ((stepZ > 0 ? ceil(z+.5) : floor(z+.5))-.5-z)/dir.z;
+      float tDeltaX = 1/abs(dir.x);
+      float tDeltaY = 1/abs(dir.y);
+      float tDeltaZ = 1/abs(dir.z);
+      do {
+        preHit = new PVector(x, y, z);
+        if(tMaxX < tMaxY) {
+          if(tMaxX < tMaxZ) {
+            x += stepX;
+            if(abs(x - cam.x/blockSize) > reach) break;
+            tMaxX= tMaxX + tDeltaX;
+          } else {
+            z += stepZ;
+            if(abs(z - cam.z/blockSize) > reach) break;
+            tMaxZ= tMaxZ + tDeltaZ;
+          }
         } else {
-          z += stepZ;
-          if(abs(z - cam.z/blockSize) > reach) break;
-          tMaxZ= tMaxZ + tDeltaZ;
+          if(tMaxY < tMaxZ) {
+            y += stepY;
+            if(abs(y - cam.y/blockSize) > reach) break;
+            tMaxY= tMaxY + tDeltaY;
+          } else {
+            z += stepZ;
+            if(abs(z - cam.z/blockSize) > reach) break;
+            tMaxZ= tMaxZ + tDeltaZ;
+          }
         }
-      } else {
-        if(tMaxY < tMaxZ) {
-          y += stepY;
-          if(abs(y - cam.y/blockSize) > reach) break;
-          tMaxY= tMaxY + tDeltaY;
-        } else {
-          z += stepZ;
-          if(abs(z - cam.z/blockSize) > reach) break;
-          tMaxZ= tMaxZ + tDeltaZ;
-        }
-      }
-      Block b = world.getBlock(round(x), round(y), round(z));
-      if (b.isSolid()) hit = new PVector(x, y, z);
-    } while (hit == null);
-    if (hit != null && hit.copy().sub(cam.div(blockSize)).mag() > reach) hit = null;
+        Block b = world.getBlock(round(x), round(y), round(z));
+        if (b.isSolid()) hit = new PVector(x, y, z);
+      } while (hit == null);
+      if (hit != null && hit.copy().sub(cam.div(blockSize)).mag() > reach) hit = null;
+    }
     
     if (!grounded && getVel().y > 0 && getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = true;
     if (grounded && !getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = false;
@@ -112,7 +116,14 @@ public class Player extends Entity {
         Block b = world.setBlock(round(hit.x), round(hit.y), round(hit.z), AIR, 0);
         addItem(new Item((byte)1, b.getType()));
       } else if (event.getButton() == 39) { // right click
-        world.setBlock(round(preHit.x), round(preHit.y), round(preHit.z), BEDROCK, 0);
+        Item i = inventory[35 + selectedItemIndex];
+        PVector p = getPos(); float x = p.x, y = p.y, z = p.z;
+        if (!(round(x/blockSize) == round(preHit.x) && round(z/blockSize) == round(preHit.z) && (round(y/blockSize) == round(preHit.y) || round(y/blockSize)-1 == round(preHit.y))) &&
+          i != null && i.getType() != I_STICK) {
+          world.setBlock(round(preHit.x), round(preHit.y), round(preHit.z), i.getType(), 0);
+          i.setCount((byte)(i.getCount() - 1));
+          if (i.getCount() == 0) {print(0); inventory[35 + selectedItemIndex] = null;}
+        }
       }
     }
   }
@@ -122,7 +133,7 @@ public class Player extends Entity {
     do { // main inventory bar
       Item it = inventory[i];
       if (firstEmpty == -1 && it == null) firstEmpty = i;
-      if (it != null && it.getCount() == 64) continue;
+      if (it != null && it.getCount() == 64) {i = i == 44 ? 5 : i+1; continue;}
       if (it != null && it.getType() == item.getType()) {
         int total = it.getCount() + item.getCount();
         if (total > 64) {
