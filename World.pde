@@ -10,7 +10,7 @@ public class World {
   private int tick;
   private GLWindow window;
   
-  private static final int loadChunks = 1, chunkSize = 16;
+  private static final int loadChunks = 0, chunkSize = 16;
   private static final int chunkHeight = 256, generationHeight = 1, waterHeight = 1, baseHeight = 2, treeBaseHeight = 3;
   private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
   private static final int dayLength = 2400;
@@ -30,7 +30,7 @@ public class World {
     // https://twicetwo.com/blog/processing/2016/03/01/processing-locking-the-mouse.html
     window = (GLWindow)surface.getNative();
     window.confinePointer(true);
-    //window.setPointerVisible(false);
+    window.setPointerVisible(false);
     window.warpPointer(width/2,height/2);
   }
   
@@ -73,14 +73,13 @@ public class World {
             pushMatrix();
             for (int h = 0; h < chunkHeight; h++) {
               Block b = chunk[h][i][j];
-              //if (random(1) < 0.5) b = getBlock(cx + i - chunkSize/2, -h, cz + j - chunkSize/2);
               if (b.getType() != AIR) {
                 boolean isHit = false;
                 float mag = 0;
                 if (hit != null) {
                   mag = new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag();
                   isHit = mag < 1;
-                  if (isHit) {stroke(0); strokeWeight(1); println(tick + " " + new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2));}
+                  if (isHit) {stroke(0); strokeWeight(1);}
                 }
                 fill(
                   b.getType() == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
@@ -88,7 +87,7 @@ public class World {
                   b.getType() == WATER ? color(0, 100, 150) :
                   b.getType() == OAK_WOOD ? color(180, 150, 0) :
                   color(0),
-                  b.getType() == WATER ? 200 : 200
+                  b.getType() == WATER ? 200 : 100
                 );
                 if (b.getType() == WATER) {
                   pushMatrix();
@@ -96,23 +95,7 @@ public class World {
                   rect(-blockSize/2, -blockSize/2, blockSize, blockSize);
                   popMatrix();
                 } else box(blockSize);
-                //textSize(5);
-                //text(mag, 0, -20);
                 if (isHit) noStroke();
-              } else {
-                boolean isHit = false;
-                float mag = 0;
-                if (hit != null) {
-                  mag = new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(new PVector(round(hit.x), round(hit.y), round(hit.z))).mag();
-                  isHit = mag < 1;
-                  if (isHit) {
-                    PVector diff = new PVector(cx + i - chunkSize/2, -h, cz + j - chunkSize/2).sub(hit);
-                    println(diff);
-                    translate(-diff.x, -diff.y, -diff.z);
-                    sphere(2);
-                    translate(diff.x, diff.y, diff.z);
-                  }
-                }
               }
               translate(0, -blockSize, 0);
             }
@@ -137,7 +120,7 @@ public class World {
     //fill(255);
     pg.textSize(20);
     pg.text(frameRate + " FPS", 10, 20);
-    pg.text((long)(cam.x/blockSize) + " " + (long)(-cam.y/blockSize) + " " + (long)(cam.z/blockSize), 10, 40);
+    pg.text(round(cam.x/blockSize) + " " + round(-cam.y/blockSize) + " " + round(cam.z/blockSize), 10, 40);
     pg.text(tick, 10, 60);
     pg.text("hit: " + hit + ", preHit: " + player.getPreHit(), 10, 80);
     pg.fill(0, 64);

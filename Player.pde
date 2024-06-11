@@ -9,7 +9,7 @@ public class Player extends Entity {
  
   private float playerSpeed = 5;
   private static final float mouseSensitivity = .2;
-  private static final float reach = 40;
+  private static final float reach = 4;
   private static final float headRadius = 5;
   
   public Player(float h, PVector d, PVector p, PVector v, World w) {
@@ -66,13 +66,13 @@ public class Player extends Entity {
           tMaxZ= tMaxZ + tDeltaZ;
         }
       }
-      Block b = world.getBlock((long)x, (long)y, (long)z);
-      if (b.isSolid()) hit = new PVector(x, y, z).add(dir);
+      Block b = world.getBlock(round(x), round(y), round(z));
+      if (b.isSolid()) hit = new PVector(x, y, z);
     } while (hit == null);
     if (hit != null && hit.copy().sub(cam.div(20)).mag() > reach) hit = null;
     
-    if (!grounded && getVel().y > 0 && getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+2, (int)(getPos().z/blockSize)).isSolid()) grounded = true;
-    if (grounded && !getWorld().getBlock((int)(getPos().x/blockSize), (int)(getPos().y/blockSize)+2, (int)(getPos().z/blockSize)).isSolid()) grounded = false;
+    if (!grounded && getVel().y > 0 && getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = true;
+    if (grounded && !getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = false;
     PVector inDir = new PVector();
     if (keyPresses['w']) inDir.add(new PVector(dir.x, 0, dir.z).normalize().mult(playerSpeed));
     if (keyPresses['a']) inDir.add(new PVector(dir.z, 0, -dir.x).normalize().mult(playerSpeed));
@@ -109,9 +109,9 @@ public class Player extends Entity {
   public void mousePressed(MouseEvent event) {
     if (hit != null) {
       if (event.getButton() == 37) // left click
-        world.setBlock((long)(hit.x), (long)(hit.y), (long)(hit.z), AIR, 0);
+        world.setBlock(round(hit.x), round(hit.y), round(hit.z), AIR, 0);
       else if (event.getButton() == 39) { // right click
-        world.setBlock((long)(preHit.x), (long)(preHit.y), (long)(preHit.z), BEDROCK, 0);
+        world.setBlock(round(preHit.x), round(preHit.y), round(preHit.z), BEDROCK, 0);
       }
     }
   }
