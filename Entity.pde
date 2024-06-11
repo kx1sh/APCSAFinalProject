@@ -27,8 +27,8 @@ public class Entity {
   public void move(PVector d, boolean gravity) {
     PVector orig = pos.copy();
     pos.add(d);
-    if (world.getBlock((int)(pos.x/blockSize), (int)(pos.y/blockSize), (int)(pos.z/blockSize)).isSolid() ||
-        world.getBlock((int)(pos.x/blockSize), (int)(pos.y/blockSize)-1, (int)(pos.z/blockSize)).isSolid()) {
+    if (world.getBlock(round(pos.x/blockSize), round(pos.y/blockSize), round(pos.z/blockSize)).isSolid() ||
+        world.getBlock(round(pos.x/blockSize), round(pos.y/blockSize)-1, round(pos.z/blockSize)).isSolid()) {
       pos = orig.copy();
     }
     
@@ -37,8 +37,8 @@ public class Entity {
       vel.add(new PVector(0, 5, 0));
       vel.limit(terminalVel);
       pos.add(vel);
-      if (world.getBlock((int)(pos.x/blockSize), (int)(pos.y/blockSize), (int)(pos.z/blockSize)).isSolid() ||
-          world.getBlock((int)(pos.x/blockSize), (int)(pos.y/blockSize)-1, (int)(pos.z/blockSize)).isSolid()) {
+      if (world.getBlock(round(pos.x/blockSize), round(pos.y/blockSize), round(pos.z/blockSize)).isSolid() ||
+          world.getBlock(round(pos.x/blockSize), round(pos.y/blockSize)-1, round(pos.z/blockSize)).isSolid()) {
         pos = orig.copy();
         vel = new PVector(0, 0, 0);
       }

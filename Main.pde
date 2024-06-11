@@ -6,7 +6,16 @@ ControlP5 menumaker;
 PFont font;
 boolean menuq = true;
 private static final int blockSize = 20;
-private static final int AIR=0, GRASS=1, BEDROCK=2, WATER=3, OAK_WOOD = 4;
+private static final int AIR=0, GRASS=1, DIRT=2, BEDROCK=3, WATER=4, OAK_WOOD=5;
+private static final int I_NONE=0, I_GRASS=1, I_DIRT=2, I_BEDROCK=3, I_STICK=4, I_OAK_WOOD=5;
+private final int[] C = {
+  color(0),
+  color(25, 200, 50),
+  color(100, 60, 40),
+  color(100),
+  color(0, 100, 150),
+  color(180, 150, 0)
+};
 private World world;
 
 public void setup() {

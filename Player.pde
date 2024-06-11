@@ -48,28 +48,28 @@ public class Player extends Entity {
       if(tMaxX < tMaxY) {
         if(tMaxX < tMaxZ) {
           x += stepX;
-          if(abs(x - cam.x/20) > reach) break;
+          if(abs(x - cam.x/blockSize) > reach) break;
           tMaxX= tMaxX + tDeltaX;
         } else {
           z += stepZ;
-          if(abs(z - cam.z/20) > reach) break;
+          if(abs(z - cam.z/blockSize) > reach) break;
           tMaxZ= tMaxZ + tDeltaZ;
         }
       } else {
         if(tMaxY < tMaxZ) {
           y += stepY;
-          if(abs(y - cam.y/20) > reach) break;
+          if(abs(y - cam.y/blockSize) > reach) break;
           tMaxY= tMaxY + tDeltaY;
         } else {
           z += stepZ;
-          if(abs(z - cam.z/20) > reach) break;
+          if(abs(z - cam.z/blockSize) > reach) break;
           tMaxZ= tMaxZ + tDeltaZ;
         }
       }
       Block b = world.getBlock(round(x), round(y), round(z));
       if (b.isSolid()) hit = new PVector(x, y, z);
     } while (hit == null);
-    if (hit != null && hit.copy().sub(cam.div(20)).mag() > reach) hit = null;
+    if (hit != null && hit.copy().sub(cam.div(blockSize)).mag() > reach) hit = null;
     
     if (!grounded && getVel().y > 0 && getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = true;
     if (grounded && !getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = false;
@@ -108,11 +108,43 @@ public class Player extends Entity {
   }
   public void mousePressed(MouseEvent event) {
     if (hit != null) {
-      if (event.getButton() == 37) // left click
-        world.setBlock(round(hit.x), round(hit.y), round(hit.z), AIR, 0);
-      else if (event.getButton() == 39) { // right click
+      if (event.getButton() == 37) { // left click
+        Block b = world.setBlock(round(hit.x), round(hit.y), round(hit.z), AIR, 0);
+        addItem(new Item((byte)1, b.getType()));
+      } else if (event.getButton() == 39) { // right click
         world.setBlock(round(preHit.x), round(preHit.y), round(preHit.z), BEDROCK, 0);
       }
     }
+  }
+  public Item addItem(Item item) {
+    int firstEmpty = -1;
+    int i = 35;
+    do { // main inventory bar
+      Item it = inventory[i];
+      if (firstEmpty == -1 && it == null) firstEmpty = i;
+      if (it != null && it.getCount() == 64) continue;
+      if (it != null && it.getType() == item.getType()) {
+        int total = it.getCount() + item.getCount();
+        if (total > 64) {
+          inventory[i].setCount((byte)64);
+          item.setCount((byte)(total - 64));
+          return addItem(item);
+        }
+        inventory[i].setCount((byte)total);
+        return null;
+      }
+      i = i == 44 ? 5 : i+1;
+    } while (i != 35);
+    
+    i = 35;
+    do {
+      Item it = inventory[i];
+      if (it == null) {
+        inventory[i] = item;
+        return null;
+      }
+      i = i == 44 ? 5 : i+1;
+    } while (i != 35);
+    return item;
   }
 }

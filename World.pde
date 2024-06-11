@@ -82,12 +82,8 @@ public class World {
                   if (isHit) {stroke(0); strokeWeight(1);}
                 }
                 fill(
-                  b.getType() == GRASS ? color(25+100+cx*3, 200+cz*2, chunkSize) :
-                  b.getType() == BEDROCK ? color(100) :
-                  b.getType() == WATER ? color(0, 100, 150) :
-                  b.getType() == OAK_WOOD ? color(180, 150, 0) :
-                  color(0),
-                  b.getType() == WATER ? 200 : 100
+                  C[b.getType()],
+                  b.getType() == WATER ? 200 : 255
                 );
                 if (b.getType() == WATER) {
                   pushMatrix();
@@ -122,7 +118,6 @@ public class World {
     pg.text(frameRate + " FPS", 10, 20);
     pg.text(round(cam.x/blockSize) + " " + round(-cam.y/blockSize) + " " + round(cam.z/blockSize), 10, 40);
     pg.text(tick, 10, 60);
-    pg.text("hit: " + hit + ", preHit: " + player.getPreHit(), 10, 80);
     pg.fill(0, 64);
     pg.stroke(color(200));
     pg.strokeWeight(8);
@@ -133,6 +128,19 @@ public class World {
     pg.stroke(color(255));
     pg.strokeWeight(10);
     pg.rect((width - width/15*19/2)/2 + width/15*sel, height - width/15*7/6, width/15, width/15);
+    pg.fill(255);
+    pg.textSize(40);
+    for (int i = 0, ind = 0; i < width/15*10; i += width/15, ind++) {
+      Item it = player.inventory[ind + 35];
+      if (it != null) {
+        pg.text(it.getType(), (width - width/15*19/2)/2 + i + 10, height - width/15*7/6 + 40);
+        if (it.getCount() >= 2) {
+          textAlign(RIGHT);
+          pg.text(it.getCount(), (width - width/15*19/2)/2 + i + width/15 - 30, height - width/15*7/6 + width/15 - 10);
+          textAlign(LEFT);
+        }
+      }
+    }
     pg.endDraw();
     image(pg, 0, 0); 
     hint(ENABLE_DEPTH_TEST);
@@ -153,7 +161,7 @@ public class World {
     for (int j = 0; j < chunkSize; j++) for (int k = 0; k < chunkSize; k++) {
       int h = round(m[j][k]) + baseHeight;
       for (int i = 0; i < chunkHeight; i++) {
-        chunk[i][j][k] = new Block(i >= h ? AIR : i == 0 ? BEDROCK : GRASS, new PVector(x+j-8 , -i, z+k-8), this);
+        chunk[i][j][k] = new Block(i >= h ? AIR : i == 0 ? BEDROCK : i == h-1 ? GRASS : DIRT, new PVector(x+j-8 , -i, z+k-8), this);
       }
       for (int i = 1; i < waterHeight; i++) {
         if (chunk[i][j][k].getType() == AIR) chunk[i][j][k] = new Block(WATER, new PVector(x+j-8, -i, z+k-8), this);
@@ -177,13 +185,15 @@ public class World {
     if (c == null) return new Block(AIR, new PVector(x, y, z), this);
     return c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
   }
-  public void setBlock(long x, long y, long z, int type, int state) {
-    if (y > 0) return;
+  public Block setBlock(long x, long y, long z, int type, int state) {
+    if (y > 0) return null;
     long tx = x + chunkSize/2, tz = z + chunkSize/2;
     long cx = (long)((tx >= 0 ? tx : tx - chunkSize + 1) / chunkSize) * chunkSize;
     long cz = (long)((tz >= 0 ? tz : tz - chunkSize + 1) / chunkSize) * chunkSize; 
     var c = chunks.get(new PVector(cx, cz));
-    if (c == null) return;
+    if (c == null) return null;
+    Block b = c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
     c[(int)-y][(int)(tx - cx)][(int)(tz - cz)] = new Block(type, state, new PVector(x, y, z), this);
+    return b;
   }
 }
