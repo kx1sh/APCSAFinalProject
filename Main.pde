@@ -27,16 +27,6 @@ public void setup() {
   menumaker = new ControlP5(this);
   menumaker.addButton("play").setPosition(width/2-50, height/2-(50*9/16)).setSize(100, 50).setLabel("Play").getCaptionLabel().setFont(font).setSize(28);
   menumaker.addButton("exxit").setPosition(width/2-50, height/2+(50*9/16)).setSize(100, 50).setLabel("Exit").getCaptionLabel().setFont(font).setSize(28);
-menumaker.addButton("backToMenuu").setPosition(50, height-70).setSize(100, 30).setLabel("back to menu").getCaptionLabel().setFont(font).setSize(12).hide();
-}
-public void backToMenuu(){
-  hint(DISABLE_DEPTH_TEST);
- menuq = true;
- if(world!=null) world=null;
- menumaker.show();
- menumaker.getController("backToMenuu").hide();
- hint(ENABLE_DEPTH_TEST);
-  noStroke();
 }
 public void draw() {
   if (menuq){
@@ -49,16 +39,7 @@ public void draw() {
    textSize(20);
    text("by Edmund and Krish", width/2, height/2-140);
   }
- else { if (world != null) {world.draw(); crossHair();}}}
-public void crossHair() {
-  hint(DISABLE_DEPTH_TEST);
-  stroke(255,0,0);
-  strokeWeight(1.3);
-  line(width/2, (height-30)/2, width/2, (height+30)/2);
-  line((width-30)/2, height/2, (width+30)/2, height/2);
-  hint(ENABLE_DEPTH_TEST);
-  noStroke();
-}
+ else { if (world != null) world.draw();}}
 public void play(){menuq = false; menumaker.hide(); world = new World();}
 public void exxit(){exit();}
 

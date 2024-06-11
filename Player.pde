@@ -27,66 +27,71 @@ public class Player extends Entity {
   
   @Override
   public void update() {
+    boolean inv = world.getInv();
     float rotationAngle = map(mx, 0, width, 0, TWO_PI);
     float elevationAngle = map(my, 0, height, 0+PI/20, PI-PI/20);
     PVector dir = new PVector(cos(rotationAngle) * sin(elevationAngle), -cos(elevationAngle), sin(rotationAngle) * sin(elevationAngle));
     setDir(dir);
     
     // http://www.cse.yorku.ca/~amana/research/grid.pdf
-    hit = null;
-    PVector cam = getPos().copy().add(new PVector(0, -1*blockSize, 0)).add(dir.copy().mult(headRadius));
-    float x = cam.x/blockSize, y = cam.y/blockSize, z = cam.z/blockSize;
-    if (world.getBlock(round(x), round(y), round(z)).isSolid()) {
-      hit = new PVector(x, y, z);
-    } else {
-      float stepX = signum(dir.x), stepY = signum(dir.y), stepZ = signum(dir.z);
-      float tMaxX = ((stepX > 0 ? ceil(x+.5) : floor(x+.5))-.5-x)/dir.x;
-      float tMaxY = ((stepY > 0 ? ceil(y+.5) : floor(y+.5))-.5-y)/dir.y;
-      float tMaxZ = ((stepZ > 0 ? ceil(z+.5) : floor(z+.5))-.5-z)/dir.z;
-      float tDeltaX = 1/abs(dir.x);
-      float tDeltaY = 1/abs(dir.y);
-      float tDeltaZ = 1/abs(dir.z);
-      do {
-        preHit = new PVector(x, y, z);
-        if(tMaxX < tMaxY) {
-          if(tMaxX < tMaxZ) {
-            x += stepX;
-            if(abs(x - cam.x/blockSize) > reach) break;
-            tMaxX= tMaxX + tDeltaX;
+    if (!inv) {
+      hit = null;
+      PVector cam = getPos().copy().add(new PVector(0, -1*blockSize, 0)).add(dir.copy().mult(headRadius));
+      float x = cam.x/blockSize, y = cam.y/blockSize, z = cam.z/blockSize;
+      if (world.getBlock(round(x), round(y), round(z)).isSolid()) {
+        hit = new PVector(x, y, z);
+      } else {
+        float stepX = signum(dir.x), stepY = signum(dir.y), stepZ = signum(dir.z);
+        float tMaxX = ((stepX > 0 ? ceil(x+.5) : floor(x+.5))-.5-x)/dir.x;
+        float tMaxY = ((stepY > 0 ? ceil(y+.5) : floor(y+.5))-.5-y)/dir.y;
+        float tMaxZ = ((stepZ > 0 ? ceil(z+.5) : floor(z+.5))-.5-z)/dir.z;
+        float tDeltaX = 1/abs(dir.x);
+        float tDeltaY = 1/abs(dir.y);
+        float tDeltaZ = 1/abs(dir.z);
+        do {
+          preHit = new PVector(x, y, z);
+          if(tMaxX < tMaxY) {
+            if(tMaxX < tMaxZ) {
+              x += stepX;
+              if(abs(x - cam.x/blockSize) > reach) break;
+              tMaxX= tMaxX + tDeltaX;
+            } else {
+              z += stepZ;
+              if(abs(z - cam.z/blockSize) > reach) break;
+              tMaxZ= tMaxZ + tDeltaZ;
+            }
           } else {
-            z += stepZ;
-            if(abs(z - cam.z/blockSize) > reach) break;
-            tMaxZ= tMaxZ + tDeltaZ;
+            if(tMaxY < tMaxZ) {
+              y += stepY;
+              if(abs(y - cam.y/blockSize) > reach) break;
+              tMaxY= tMaxY + tDeltaY;
+            } else {
+              z += stepZ;
+              if(abs(z - cam.z/blockSize) > reach) break;
+              tMaxZ= tMaxZ + tDeltaZ;
+            }
           }
-        } else {
-          if(tMaxY < tMaxZ) {
-            y += stepY;
-            if(abs(y - cam.y/blockSize) > reach) break;
-            tMaxY= tMaxY + tDeltaY;
-          } else {
-            z += stepZ;
-            if(abs(z - cam.z/blockSize) > reach) break;
-            tMaxZ= tMaxZ + tDeltaZ;
-          }
-        }
-        Block b = world.getBlock(round(x), round(y), round(z));
-        if (b.isSolid()) hit = new PVector(x, y, z);
-      } while (hit == null);
-      if (hit != null && hit.copy().sub(cam.div(blockSize)).mag() > reach) hit = null;
+          Block b = world.getBlock(round(x), round(y), round(z));
+          if (b.isSolid()) hit = new PVector(x, y, z);
+        } while (hit == null);
+        if (hit != null && hit.copy().sub(cam.div(blockSize)).mag() > reach) hit = null;
+      }
     }
     
     if (!grounded && getVel().y > 0 && getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = true;
     if (grounded && !getWorld().getBlock(round(getPos().x/blockSize), round(getPos().y/blockSize)+2, round(getPos().z/blockSize)).isSolid()) grounded = false;
     PVector inDir = new PVector();
-    if (keyPresses['w']) inDir.add(new PVector(dir.x, 0, dir.z).normalize().mult(playerSpeed));
-    if (keyPresses['a']) inDir.add(new PVector(dir.z, 0, -dir.x).normalize().mult(playerSpeed));
-    if (keyPresses['s']) inDir.add(new PVector(-dir.x, 0, -dir.z).normalize().mult(playerSpeed));
-    if (keyPresses['d']) inDir.add(new PVector(-dir.z, 0, dir.x).normalize().mult(playerSpeed));
-    if (keyPresses[' ']) {
-      //inDir.add(new PVector(0, -playerSpeed, 0)); // flying
-      if (grounded) setVel(new PVector(0, -blockSize, 0)); // jumping
+    if (!inv) {
+      if (keyPresses['w']) inDir.add(new PVector(dir.x, 0, dir.z).normalize().mult(playerSpeed));
+      if (keyPresses['a']) inDir.add(new PVector(dir.z, 0, -dir.x).normalize().mult(playerSpeed));
+      if (keyPresses['s']) inDir.add(new PVector(-dir.x, 0, -dir.z).normalize().mult(playerSpeed));
+      if (keyPresses['d']) inDir.add(new PVector(-dir.z, 0, dir.x).normalize().mult(playerSpeed));
+      if (keyPresses[' ']) {
+        //inDir.add(new PVector(0, -playerSpeed, 0)); // flying
+        if (grounded) setVel(new PVector(0, -blockSize, 0)); // jumping
+      }
+      if (keyPresses[256 + SHIFT]) inDir.add(new PVector(0, playerSpeed, 0));
     }
-    if (keyPresses[256 + SHIFT]) inDir.add(new PVector(0, playerSpeed, 0));
     move(inDir.normalize().mult(playerSpeed), true);
   }
   
@@ -94,27 +99,30 @@ public class Player extends Entity {
     if (key == CODED) keyPresses[256 + keyCode] = true;
     else keyPresses[key] = true;
     
-    if (key >= '0' && key <= '9') selectedItemIndex = (byte)((key - '0' + 9) % 10);
+    if (!getWorld().getInv() && key >= '0' && key <= '9') selectedItemIndex = (byte)((key - '0' + 9) % 10);
+    if (key == 'e') world.toggleInv();
   }  
   public void keyReleased() {
     if (key == CODED) keyPresses[256 + keyCode] = false;
     else keyPresses[key] = false;
   }  
   public void mouseWheel(MouseEvent event) {
-    selectedItemIndex = (byte)((selectedItemIndex + event.getCount() + 20) % 10);
+    if (!getWorld().getInv()) selectedItemIndex = (byte)((selectedItemIndex + event.getCount() + 20) % 10);
   }  
   public void mouseMoved(MouseEvent event) {
-    mx += (event.getX() - width/2) * mouseSensitivity;
-    mx %= width;
-    my += (event.getY() - height/2) * mouseSensitivity;
-    my = constrain(my, 0, height);
-    world.getWindow().warpPointer(width/2,height/2);
+    if (!getWorld().getInv()) {
+      mx += (event.getX() - width/2) * mouseSensitivity;
+      mx %= width;
+      my += (event.getY() - height/2) * mouseSensitivity;
+      my = constrain(my, 0, height);
+      world.getWindow().warpPointer(width/2,height/2);
+    }
   }
   public void mousePressed(MouseEvent event) {
     if (hit != null) {
       if (event.getButton() == 37) { // left click
         Block b = world.setBlock(round(hit.x), round(hit.y), round(hit.z), AIR, 0);
-        addItem(new Item((byte)1, b.getType()));
+        if (b.isSolid()) addItem(new Item((byte)1, b.getType()));
       } else if (event.getButton() == 39) { // right click
         Item i = inventory[35 + selectedItemIndex];
         PVector p = getPos(); float x = p.x, y = p.y, z = p.z;

@@ -9,6 +9,7 @@ public class World {
   private long seed;
   private int tick;
   private GLWindow window;
+  private boolean inv;
   
   private static final int loadChunks = 1, chunkSize = 16;
   private static final int chunkHeight = 256, generationHeight = 10, waterHeight = 9, baseHeight = 2, treeBaseHeight = 5;
@@ -17,6 +18,15 @@ public class World {
   
   public Player getPlayer() {return player;}
   public GLWindow getWindow() {return window;}
+  public boolean getInv() {return inv;}
+  public void toggleInv() {
+    inv = !inv;
+    if (inv) window.setPointerVisible(true);
+    else {
+      window.setPointerVisible(false);
+      window.warpPointer(width/2,height/2);
+    }
+  }
   
   public World() {
     noStroke();
@@ -26,6 +36,7 @@ public class World {
     player = new Player(10, new PVector(), new PVector(0, -500, 0), new PVector(), this);
     seed = (long)random(1 << 63);
     tick = 0;
+    inv = false;
     
     // https://twicetwo.com/blog/processing/2016/03/01/processing-locking-the-mouse.html
     window = (GLWindow)surface.getNative();
@@ -123,24 +134,30 @@ public class World {
     pg.strokeWeight(8);
     int sel = player.getSelectedItemIndex();
     for (int i = 0, ind = 0; i < width/15*10; i += width/15, ind++) {
-      if (ind != sel) pg.rect((width - width/15*19/2)/2 + i, height - width/15*7/6, width/15, width/15);
+      if (ind != sel) pg.rect((width - width/15*20/2)/2 + i, height - width/15*7/6, width/15, width/15);
     }
     pg.stroke(color(255));
     pg.strokeWeight(10);
-    pg.rect((width - width/15*19/2)/2 + width/15*sel, height - width/15*7/6, width/15, width/15);
+    pg.rect((width - width/15*20/2)/2 + width/15*sel, height - width/15*7/6, width/15, width/15);
     pg.fill(255);
     pg.textSize(40);
     for (int i = 0, ind = 0; i < width/15*10; i += width/15, ind++) {
       Item it = player.inventory[ind + 35];
       if (it != null) {
-        pg.text(it.getType(), (width - width/15*19/2)/2 + i + 10, height - width/15*7/6 + 40);
+        pg.text(it.getType(), (width - width/15*20/2)/2 + i + 10, height - width/15*7/6 + 40);
         if (it.getCount() >= 2) {
           textAlign(RIGHT);
-          pg.text(it.getCount(), (width - width/15*19/2)/2 + i + width/15 - 30, height - width/15*7/6 + width/15 - 10);
+          pg.text(it.getCount(), (width - width/15*20/2)/2 + i + width/15 - 45, height - width/15*7/6 + width/15 - 10);
           textAlign(LEFT);
         }
       }
     }
+    pg.stroke(255,0,0);
+    pg.strokeWeight(1.3);
+    pg.line(width/2, (height-30)/2, width/2, (height+30)/2);
+    pg.line((width-30)/2, height/2, (width+30)/2, height/2);
+    pg.noStroke();
+    if (inv) showInventory(pg);
     pg.endDraw();
     image(pg, 0, 0); 
     hint(ENABLE_DEPTH_TEST);
@@ -195,5 +212,13 @@ public class World {
     Block b = c[(int)-y][(int)(tx - cx)][(int)(tz - cz)];
     c[(int)-y][(int)(tx - cx)][(int)(tz - cz)] = new Block(type, state, new PVector(x, y, z), this);
     return b;
+  }
+  
+  public void showInventory(PGraphics pg) {
+    pg.fill(0, 128);
+    pg.noStroke();
+    pg.rect(0, 0, width, height);
+    pg.fill(160, 160, 150);
+    pg.rect(200, 50, width-400, height-100);
   }
 }
