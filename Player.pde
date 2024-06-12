@@ -24,6 +24,7 @@ public class Player extends Entity {
   public byte getSelectedItemIndex() {return selectedItemIndex;}
   public PVector getHit() {return hit;}
   public PVector getPreHit() {return preHit;}
+  public Item[] getInventory() {return inventory;}
   
   @Override
   public void update() {

@@ -6,16 +6,18 @@ ControlP5 menumaker;
 PFont font;
 boolean menuq = true;
 private static final int blockSize = 20;
-private static final int AIR=0, GRASS=1, DIRT=2, BEDROCK=3, WATER=4, OAK_WOOD=5;
-private static final int I_NONE=0, I_GRASS=1, I_DIRT=2, I_BEDROCK=3, I_STICK=4, I_OAK_WOOD=5;
+private static final int AIR=0, GRASS=1, DIRT=2, BEDROCK=3, WATER=4, OAK_WOOD=5, OAK_WOOD_PLANKS=6;
+private static final int I_NONE=0, I_GRASS=1, I_DIRT=2, I_BEDROCK=3, I_STICK=4, I_OAK_WOOD=5, I_OAK_WOOD_PLANKS=6;
 private final int[] C = {
   color(0),
   color(25, 200, 50),
   color(100, 60, 40),
   color(100),
   color(0, 100, 150),
-  color(180, 150, 0)
+  color(148, 111, 0),
+  color(180, 150, 0),
 };
+private PImage[] imageItems = new PImage[I_OAK_WOOD_PLANKS+1];
 private World world;
 
 public void setup() {
@@ -27,6 +29,12 @@ public void setup() {
   menumaker = new ControlP5(this);
   menumaker.addButton("play").setPosition(width/2-50, height/2-(50*9/16)).setSize(100, 50).setLabel("Play").getCaptionLabel().setFont(font).setSize(28);
   menumaker.addButton("exxit").setPosition(width/2-50, height/2+(50*9/16)).setSize(100, 50).setLabel("Exit").getCaptionLabel().setFont(font).setSize(28);
+  
+  for (int i = 1; i < I_OAK_WOOD_PLANKS+1; i++) {
+    try {
+      imageItems[i] = loadImage("textures/items"+(i+1)+".png");
+    } catch (Exception e) {}
+  }
 }
 public void draw() {
   if (menuq){
