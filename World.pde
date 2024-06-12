@@ -245,6 +245,7 @@ public class World {
           } else if (invSelect != 0) { // split
             inventory[i+5] = new Item((byte)((s.getCount()+1)/2), s.getType());
             s.setCount((byte)(s.getCount()/2));
+            if (s.getCount() == 0) inventory[invSelect] = null;
             if (invSelect < 5) craftRes();
             invSelect = -1;
           }
@@ -280,6 +281,7 @@ public class World {
           } else if (invSelect != 0) { // split
             inventory[i+1] = new Item((byte)((s.getCount()+1)/2), s.getType());
             s.setCount((byte)(s.getCount()/2));
+            if (s.getCount() == 0) inventory[invSelect] = null;
             invSelect = -1;
           }
         }
@@ -329,6 +331,8 @@ public class World {
     inventory[0] = null;
     if (inventory[1] != null && inventory[1].getType() == I_OAK_WOOD && inventory[2] == null && inventory[3] == null && inventory[4] == null) {
       inventory[0] = new Item((byte)4, I_OAK_WOOD_PLANKS);
+    } else if (inventory[1] != null && inventory[1].getType() == I_OAK_WOOD_PLANKS && inventory[3] != null && inventory[3].getType() == I_OAK_WOOD_PLANKS && inventory[2] == null && inventory[4] == null) {
+      inventory[0] = new Item((byte)4, I_STICK);
     }
   }
   private void useInputs() {

@@ -120,7 +120,7 @@ public class Player extends Entity {
     }
   }
   public void mousePressed(MouseEvent event) {
-    if (hit != null) {
+    if (!getWorld().getInv() && hit != null) {
       if (event.getButton() == 37) { // left click
         Block b = world.setBlock(round(hit.x), round(hit.y), round(hit.z), AIR, 0);
         if (b.isSolid()) addItem(new Item((byte)1, b.getType()));
