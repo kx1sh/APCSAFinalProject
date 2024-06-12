@@ -11,7 +11,7 @@ public class World {
   private GLWindow window;
   private boolean inv;
   private int invSelect;
-  
+  private String xmode = “Survival”;
   private static final int loadChunks = 1, chunkSize = 16;
   private static final int chunkHeight = 30, generationHeight = 10, waterHeight = 9, baseHeight = 2, treeBaseHeight = 5;
   private final int NOON=color(119, 186, 231), MIDNIGHT=color(10, 20, 50), RED_SKY=color(255, 176, 133);
@@ -29,6 +29,26 @@ public class World {
     }
   }
   
+ public World(String t) {
+xmode = t; 
+    noStroke();
+    smooth();
+    float cameraZ = ((height/2.0) / tan(PI*60.0/360.0));
+    perspective(PI/3.0, (float)width/height, 1e-2, cameraZ*10.0);
+    player = new Player(10, new PVector(), new PVector(0, -300, 0), new PVector(), this);
+    seed = (long)random(1 << 63);
+    tick = 0;
+    inv = false;
+    invSelect = -1;
+    
+    // https://twicetwo.com/blog/processing/2016/03/01/processing-locking-the-mouse.html
+    window = (GLWindow)surface.getNative();
+    window.confinePointer(true);
+    window.setPointerVisible(false);
+    window.warpPointer(width/2,height/2);
+  }
+  
+
   public World() {
     noStroke();
     smooth();
